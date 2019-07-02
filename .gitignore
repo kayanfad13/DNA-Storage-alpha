@@ -102,3 +102,9 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+\.vs/DNA-Storage-alpha/v15/
+
+\.vs/config/
+
+\.vs/
