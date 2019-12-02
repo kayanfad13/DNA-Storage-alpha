@@ -1,37 +1,38 @@
-def print_dna(seq):
-	return [seq for _ in range(10)]
-#:it recieve a dna srtrig (str) that is the seq and a parameter a (float)
-#:a= mistakes percentage
-#:seq= dna to print
-#:printed_dna= where the dna would be printed
-#:it gives a random number to every base and if:
-#:it was under the mistake percentage then it'll replace it
-#:- it picks randomly from the mistake list:
-#:-- if it picks adding then it'll add that base and it'll add a random base
-#:-- if it picks changing it'll add a base that is not like the previous one
-#:-- if it picks decreasing it'll continue and not add anything
-#:if the number is bigger than the mistake percentage then it will add the original base
-#: the function print it 100 times
 
-def printer(dna, a):
-	printed_dna = ''
-	import random
-	list_of_bases = ['A', 'T', 'G', 'C']
-	list_of_mistakes = ['adding', 'changing', 'decreasing']
-	x = random.choice(list_of_mistakes)
-	for times in range (100):
-		for parts in dna:
-			for i in parts:
-				y = random.random()
-				if y < a:
-					if x == 'adding':
-						printed_dna += i
-						printed_dna += random.choice(list_of_bases)
-					elif x == 'changing':
-						random.choice(list_of_bases) != i
-						prinrted_dna += random.choice(list_of_bases)
-					elif x == 'decreasing':
-						continue
-			else:
-				printed_dna += i
-	return printed_dna
+import random
+import sys
+sys.path.append('C:\\Users\\kayan\\Documents\\Projects\\DNA-Storage-alpha')
+from simualtors.helper_functions.helper_functions import add_errors_multiple_inputs
+from encoding.bin2dna.two_bits import bin2dna
+import numpy as np
+
+def printer(dna, mstk_prsnt, base_in_oligo, num_of_cps):
+	# pad with AAAA
+	if len(dna) % base_in_oligo == 0:
+		padding_length = 0
+		dna_padded = dna
+	else:
+		padding_length = base_in_oligo - len(dna) % base_in_oligo
+		padding  = ['A',]* padding_length
+		dna_padded = dna + ''.join(padding)
+	# split the DNA sequence
+	number_of_parts = len(dna_padded) // base_in_oligo
+	dna_parts = [dna_padded[i*base_in_oligo:i*base_in_oligo+base_in_oligo] for i in range(number_of_parts)]
+	# Add padded indices (limited to 2^12 parts)
+	ind_as_int = range(number_of_parts)
+	ind_as_binary = [bin(i)[2:].zfill(12) for i in ind_as_int]
+	ind_as_DNA = [bin2dna.bin_to_dna_two_bits(i)[0] for i in ind_as_binary]
+	oligos = [i+d for i,d in zip(ind_as_DNA,dna_parts)]
+	# determine how mnay copies from each part
+	mol_cnt = np.random.binomial(num_of_cps, 1.0/len(oligos), len(oligos))
+	print(mol_cnt)
+	# copy each oligo multiple times (gnerate list of lists)
+	dna_mols_as_lists = [[oligo,]*cnt for oligo,cnt in zip(oligos,mol_cnt)]
+	dna_mols = [mol for mol_list in dna_mols_as_lists for mol in mol_list]
+	# add errors
+	dna_mols_with_errors = add_errors_multiple_inputs(dna_mols,mstk_prsnt)
+	# shuffle molecules
+	shuffled_dna_mols = random.sample(dna_mols_with_errors,len(dna_mols_with_errors))
+	return shuffled_dna_mols,padding_length, number_of_parts
+
+#print(printer('CAGTGCAGGATCGGCTTTCTTTCGTCCCTC', 0, 4, 0, 20))
